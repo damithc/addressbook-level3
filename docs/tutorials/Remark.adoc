@@ -13,26 +13,28 @@ ifdef::env-github[]
 endif::[]
 
 
-== Implementing your first feature
-
-Let's get started!
+== Adding your first command
 
 In this tutorial, we'll walk you through the implementation of a new command -- `remark`.
+
 This command allows users of the AddressBook application to add optional remarks to people in their address book and
-edit it if required.
+edit it if required. The command should have the format of `remark INDEX r/REMARK`. An example of the command is
+`remark 2 r/Likes baseball`.
 
 We'll assume that you have already set up the development environment as outlined in the Developer's Guide.
 
-TIP: If you ever get stuck on the tutorial, head over to the forum!
-
-
 === Create a new `Command`
 
-Let's start by creating a new `RemarkCommand` class in the `src/main/java/seedu/address/logic/command` directory.
-All commands in AddressBook must implement the `Command` interface.
+Looking in the `logic.command` package, you will notice that each existing command have their own class. All the
+commands implement `Command` which means that they must override `execute()`. By convention, `Command` returns an
+instance of `CommandResult` upon success and throws a `CommandException` otherwise. This exception is handled
+gracefully and the error message provided to `CommandException` is printed the application.
 
-For now, let's just make `RemarkCommand` return a message that it is not fully implemented yet. We accomplish
-that by throwing a `CommandException` with an accompanying error message.
+Let's start by creating a new `RemarkCommand` class in the `src/main/java/seedu/address/logic/command` directory.
+
+
+For now, let's keep `RemarkCommand` as simple as possible and return a message that it is not fully implemented yet. We
+accomplish that by throwing a `CommandException` with an accompanying error message.
 
 Check out the code for the `RemarkCommand`
 link:++https://github.com/j-lum/addressbook-level35/commit/72256eacea79dfcf077f5c7cb6f89819c02f090e#diff
@@ -47,48 +49,9 @@ You can refer to the changes in this
 link:++https://github.com/j-lum/addressbook-level35/commit/72256eacea79dfcf077f5c7cb6f89819c02f090e#diff
 -5338391f3f6fbb4022c44add6590b74f++[diff].
 
+=== Run the application
 
-=== Write tests
-
-NOTE: While testing is extremely important, you can choose to postpone writing tests _for this tutorial_.
-
-On `IntelliJ IDEA` you can bring up the context menu and choose to Go To > Test or use the appropriate keyboard
-shortcut.
-
-.Using the context menu to jump to tests
-image::ContextMenu.png[]
-
-Next, create a test for the `execute` method.
-
-.Creating a test for `execute`.
-image::CreateTest.png[]
-
-We assert that `RemarkCommand` fails as expected using the helpful utility function
-`CommandTestUtil#assertCommandFailure`.
-
-TIP: You can use the `Search for target by name` feature in IntelliJ IDEA to look for classes by their name. A quick
-way to bring up the dialog is to hit the `shift` key twice.
-
-Since we made modifications to the `AddressBookParser`, we need to write tests for it as well. A simple test that
-ensures that the `remark` keyword is parsed correctly will suffice.
-
-The completed tests should look something like
-link:++https://github.com/j-lum/addressbook-level35/commit/72256eacea79dfcf077f5c7cb6f89819c02f090e#diff
--d749de38392f7ea504da7824641ba8d9++[this].
-
-=== Build the project
-
-Let's use _gradle_ to build our project. You can either use the terminal (`gradlew <tasks...> `) or define a run
-configuration in IntelliJ IDEA.
-
-.Using the gradle toolbar to define a task.
-image::GradleRun.png[]
-
-We run the `clean` task to remove any leftovers from previous builds and then `check` to run both our tests and
-`checkstyle` tasks.
-
-If the build is successful, you can now run the application and check that the `remark` keyword fails gracefully as
-expected!
+Run `Main#main` and try out your new `RemarkCommand`. If everything went well, you should see something like this:
 
 .Successful failure
 image::RemarkNotImplemented.png[]
