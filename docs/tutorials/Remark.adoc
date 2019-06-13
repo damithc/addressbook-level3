@@ -87,27 +87,11 @@ If you are stuck, check out the sample
 link:++https://github.com/j-lum/addressbook-level35/commit/c0f8419be4fb59bffafcd73026769459e5cf5c5e#diff
 -fc19ecee89c3732a62fbc8c840250508++[here].
 
-=== Write more tests
-
-We suggest writing the following tests to verify that the new features are working as intended.
-
-- Equality checks for `RemarkCommand` are correct
-- `RemarkCommand` fails with the new message when executed
-- `AddressBookParser` returns a `RemarkCommand` with correct input
-- `RemarkCommandParser` parses both valid and invalid input correctly
-
-If all the
-link:++https://github.com/j-lum/addressbook-level35/commit/c0f8419be4fb59bffafcd73026769459e5cf5c5e#diff
--d749de38392f7ea504da7824641ba8d9++[tests] pass, try running the application again! With any luck, you should see
-something like this:
-
-.Fails successfully and verbosely
-image::RemarkFailureOutput.png[]
-
 == Adding to the model
 
 Now that we have all the information that we need, let's lay the groundwork for some _persistent_ changes. We acheive
- that by working with the `Person` model.
+ that by working with the `Person` model. Each field in a Person is encapsulated. This protects them from illegal
+ access and allows us to tightly couple logic specific to the field.
 
 === Add a new `Remark` class
 
@@ -122,16 +106,6 @@ link:++https://github.com/j-lum/addressbook-level35/commit/c8e6048f0d81f2b4b7797
 
 Let's change `RemarkCommand` and `RemarkCommandParser` to use the new `Remark` class instead of plain `String`.
 These should be relatively simple changes.
-
-=== Write even more tests
-
-Update tests for `AddressBookParser`, `RemarkCommandParser` and `RemarkCommand` to use the new `Remark` class instead.
-
-Write tests to ensure that `Remark` works as intended.
-
-Check out some of the suggested
-link:++https://github.com/j-lum/addressbook-level35/commit/c8e6048f0d81f2b4b7797e838226da823892129b#diff
--d749de38392f7ea504da7824641ba8d9++[tests].
 
 == Adding placeholder elements to the UI
 
@@ -180,16 +154,7 @@ We change the constructor of `Person` to take a `Remark`. We will also need to d
 Unfortunately, a change to `Person` will cause other commands to break, let's fix these commands to use the updated
 `Person`!
 
-
-=== Write some more tests
-
-It should be habit by now, but everything that is changed requires a new set of tests.
-
-Suggested tests and their implementations can be found
-link:++https://github.com/j-lum/addressbook-level35/commit/b03b788d5a462403ea7f4dce9a832b62f729f7c4#diff
--60c0eb4d8d0747d80bbe3be2830985a3++[here].
-
-== Update Storage
+== Updating Storage
 
 AddressBook stores data by serializing `JsonAdaptedPerson` into `json` with the help of an external library --
 Jackson. Let's update `JsonAdaptedPerson` to work with our new `Person`!
@@ -216,7 +181,7 @@ image::RemarkBound.png[]
 After the previous step, we notice a peculiar regression -- we went from displaying something to nothing at all.
 However, this is expected behavior as we have never changed `Remark` at all!
 
-=== Changing `Remark`
+=== Change `Remark`
 
 In this last step, we modify `RemarkCommand#execute()` to change the `Remark` of a `Person`. Since all fields in a
 `Person` are immutable, we create a new instance of a `Person` with the values that we want and commit it back to the
@@ -227,4 +192,22 @@ After writing the very last set of test, you are now ready to test `RemarkComman
 .Congratulations!
 image::RemarkComplete.png[]
 
+== Writing tests
 
+Tests are crucial to ensuring that bugs don't slip into the codebase unnoticed. This is especially true for large
+code bases where a change might lead to unintended behavior.
+
+Let's verify the correctness of our code by writing some tests!
+
+=== Automagically generating tests
+
+On `IntelliJ IDEA` you can bring up the context menu and choose to Go To > Test or use the appropriate keyboard
+shortcut.
+
+.Using the context menu to jump to tests
+image::ContextMenu.png[, 1223px, 267px]
+
+Next, create a test for the `execute` method.
+
+.Creating a test for `execute`.
+image::CreateTest.png[, 664px,751px]
