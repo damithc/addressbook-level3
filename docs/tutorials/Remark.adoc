@@ -201,13 +201,37 @@ Let's verify the correctness of our code by writing some tests!
 
 === Automagically generating tests
 
-On `IntelliJ IDEA` you can bring up the context menu and choose to Go To > Test or use the appropriate keyboard
+The goal is to write effective and efficient tests to ensure that `RemarkCommand#execute()` behaves as expected.
+
+The convention for test names is _``methodName_testScenario_expectedResult``_. An example would be
+`execute_filteredList_success`.
+
+Let's create a test for `RemarkCommand#execute()` to test that adding a remark works. On `IntelliJ IDEA`
+you can bring up the context menu and choose to `Go To` > `Test` or use the appropriate keyboard
 shortcut.
 
 .Using the context menu to jump to tests
 image::ContextMenu.png[, 1223px, 267px]
 
-Next, create a test for the `execute` method.
+Then, create a test for the `execute` method.
 
 .Creating a test for `execute`.
 image::CreateTest.png[, 664px,751px]
+
+Following convention, let's change the name of the generated method to `execute_addRemarkUnfilteredList_success`.
+
+Let's use the utility functions provided in `CommandTestUtil`. The functions ensure that commands produce the
+expected `CommandResult` and output the correct message. In this case, `CommandTestUtil#assertCommandSuccess` is the
+best fit as we are testing that a `RemarkCommand` will successfully add a `Remark`.
+
+You should end up with a test that looks something like
+link:++https://github.com/j-lum/addressbook-level35/commit/1492fb0d4e8a075f2481028377e0d113e7c01b76#diff
+-d749de38392f7ea504da7824641ba8d9++[this].
+
+== Conclusion
+
+This concludes the tutorial for adding a new `Command` to AddressBook.
+
+//Link to more discussions
+
+
