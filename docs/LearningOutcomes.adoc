@@ -21,8 +21,8 @@ toc::[]
 
 === Exercise: Add more user stories
 
-* Assume you are planing to expand the functionality of the AddressBook (but keep it as a CLI application).
-What other user stories do you think AddressBook should support? Add those user stories to the `DeveloperGuide.adoc`.
+* Assume you are planing to expand the functionality of the TodoList (but keep it as a CLI application).
+What other user stories do you think TodoList should support? Add those user stories to the `DeveloperGuide.adoc`.
 
 == Utilize use cases `[LO-UseCases]`
 
@@ -35,7 +35,7 @@ What other user stories do you think AddressBook should support? Add those user 
 * Add a use case to the `DeveloperGuide.adoc` to cover the case of _renaming of an existing tag_.
 e.g. rename the tag `friends` to `buddies` (i.e. all persons who had the `friends` tag will now have
 a `buddies` tag instead)
-Assume that AddressBook confirms the change with the user before carrying out the operation.
+Assume that TodoList confirms the change with the user before carrying out the operation.
 
 == Use Non Functional Requirements `[LO-NFR]`
 
@@ -60,7 +60,7 @@ Note how the `Command::execute()` method shows polymorphic behavior.
 
 * Add a method `boolean isMutating()` to the `Command` class. This method will return `true` for
 command types that mutate the data. e.g. `AddCommand`
-* Currently, AddressBook data are saved to the file after every command.
+* Currently, TodoList data are saved to the file after every command.
 Take advantage of the the new method you added to limit file saving to only for command types that mutate data.
 i.e. `add` command should always save the data while `list` command should never save data to the file.
 
@@ -141,7 +141,7 @@ method in the child class should not reject `null` inputs. This will not be enfo
 
 === Exercise: Enhance GUI
 
-* Do some enhancements to the AddressBook GUI. e.g. add an application icon, change font size/style
+* Do some enhancements to the TodoList GUI. e.g. add an application icon, change font size/style
 
 == Analyze Coupling and Cohesion of designs `[LO-CouplingCohesion]`
 
@@ -228,6 +228,6 @@ of storages, but different number of storages (e.g. save to both a text file and
 
 == Work in a 3KLoC code base `[LO-3KLoC]`
 
-=== Exercise: Enhance AddressBook
+=== Exercise: Enhance TodoList
 
-* Enhance AddressBook in some way. e.g. add a new command
+* Enhance TodoList in some way. e.g. add a new command
