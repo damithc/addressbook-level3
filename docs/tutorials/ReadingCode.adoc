@@ -1,0 +1,286 @@
+= AddressBook Level 3.5 - Reading Code
+:site-section: Tutorial
+:toc: macro
+:toc-title:
+:imagesDir: images/reading
+:stylesDir: ../stylesheets
+:xrefstyle: full
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:warning-caption: :warning:
+:source-highlighter: highlightjs
+endif::[]
+
+[quote, Robert C. Martin, Clean Code: A Handbook of Agile Software Craftsmanship ]
+Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We are constantly reading old code as
+part of the effort to write new code.  ...[Therefore,] making it easy to read makes it easier to write.
+
+{empty} +
+
+In this tutorial, you will learn practical skills to navigate a large code base. We will be using the debugger
+provided by IntelliJ IDEA to trace the execution flow of Address Book from the point when a user inputs a valid `edit`
+command to rendering the output.
+
+This tutorial consists of a few steps:
+
+toc::[]
+
+== Setting the entry point of the application
+
+[qanda]
+Search for `MainWindow.java` ::
+You can achieve this by using the `Search for a target by name` feature. Either click on `Navigate` > `Class` or the
+keyboard shortcut `Crtl + N`.
+
+Locate the executeCommand() method ::
+Bring up the `Structure` tool window with `View` > `Tool Windows` > `Structure` and locate the method from there.
+image:StructureToolWindow.png[width=470px, height=590px]
+
+Set the breakpoint ::
+The breakpoint that we want to set is on the `executeCommand()` method. Click on the left gutter to set a breakpoint.
+image:LeftGutter.png[width=1171px, height=154px]
+
+
+.Finding breakpoints
+****
+Unlike simple CLI applications, Address Book subscribes to an event-driven architecture style. Finding the
+correct place to set a breakpoint requires an in-depth understanding of JavaFX's event delivery process and is
+outside the scope of this tutorial.
+
+However, with a bit of intuition and guesswork, it is possible to trace the program through the following:
+
+`Main#main()` > `MainApp#init()` > `UIManager#fillInnerParts()`
+
+An `executeCommand()` passed as a constructor to `CommandBox` should raise an eyebrow and that's exactly the method
+we're looking for!
+****
+
+== Tracing the flow of the application
+
+Recall from the User Guide that the `edit` command has the format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL]
+[a/ADDRESS] [t/TAG]...` For this tutorial we will be issuing the command `edit 1 n/Alice Yeoh`.
+
+[TIP]
+.Taking notes
+====
+Over the course of the debugging session, you will encounter every major component in the application. Joting down a
+call graph or a sequence diagram might help your understanding!
+====
+
+. Simply `Run` > `Debug `Main`` to start the session!
+. Enter `edit 1 n/Alice Yeoh` into the command box and press `Enter`.
+. The Debugger tool window should show up and look something like this:
++
+image:DebuggerStep1.png[width=1351px,height=485px]
+. Use the `Show execution point` feature to jump to the line of code that we stopped at:
++
+image:ShowExecutionPoint.png[width=525px,height=91px]
+. `CommandResult commandResult = logic.execute(commandText);` is the line that you end up at.
+. We are interested in the `logic.execute(commandText)` portion of that line so let's `Step in` into that method call:
++
+image:StepInto.png[width=525px, height=90px]
+. We end up in `LogicManager#execute()`. Let's take a look at the body of the method and annotate what we can deduce.
++
+.LogicManager#execute()
+[source, java]
+----
+@Override
+public CommandResult execute(String commandText) throws CommandException, ParseException {
+     logger.info("----------------[USER COMMAND][" + commandText + "]"); //Logging, safe to ignore
+
+     CommandResult commandResult;
+     Command command = addressBookParser.parseCommand(commandText); //Parse user input from String to a Command
+     commandResult = command.execute(model); //Executes the Command and stores the result
+
+     try {
+         //We can deduce that the previous line of code modifies model in some way since it's being stored here.
+         storage.saveAddressBook(model.getAddressBook());
+     } catch (IOException ioe) {
+         throw new CommandException(FILE_OPS_ERROR_MESSAGE + ioe, ioe);
+     }
+
+     return commandResult;
+ }
+----
+. `LogicManager#execute()` appears to delegate most of the heavy lifting to other components. Let's take a closer
+look at each one.
+. `Step over` the logging code since it is of no interest to us now.
+image:StepOver.png[width=525px, height=83px]
++
+. `Step into` the line where user input in parsed from a String to a Command.
++
+.AddressBookParser#parseCommand()
+[source, java]
+----
+/**
+ * Parses user input into command for execution.
+ *
+ * @param userInput full user input string
+ * @return the command based on the user input
+ * @throws ParseException if the user input does not conform the expected format
+ */
+public Command parseCommand(String userInput) throws ParseException {
+    final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(userInput.trim()); //Regex to break user input into two groups
+    if (!matcher.matches()) {
+        throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
+    }
+    final String commandWord = matcher.group("commandWord");
+    final String arguments = matcher.group("arguments");
+    ....
+
+----
+. `Step over` until you reach the `switch` statement. The `Variables` window now shows the value of both
+`commandWord` and `arguments` :
++
+image:Variables.png[width=1310px, height=403px]
+. We see that the value of `commandWord` is now `edit` but `arguments` is still not processed in any meaningful way.
+. Stepping into the `switch`, we obviously stop at
++
+.AddressBookParser#parseCommand()
+[source, java]
+----
+...
+case EditCommand.COMMAND_WORD:
+    return new EditCommandParser().parse(arguments);
+....
+----
+. Let's see what `EditCommandParser#parse()` does by stepping into it.
+. Stepping through the method shows that it calls `ArgumentTokenizer#tokenize()` and `ParserUtil#parseIndex()` to
+obtain the arguments and index required.
++
+[TIP]
+.Stepping out
+====
+Sometimes you might end up stepping into functions that are not of interest. Simply `step out` of them!
+====
+. The rest of the method seems to exhaustively check for the existence of each possible parameter of the `edit`
+command and store any possible changes in an `EditPersonDescriptor`. Recall that we can verify the contents of
+`editPersonDesciptor` through the `Variable` tool window.
++
+image:EditCommand.png[width=666px, height=313px]
+. Let's continue stepping through until we return to `LogicManager#execute()`.
+. Now let's see what happens when we call `command#execute()`!
++
+.EditCommand#execute()
+[source, java]
+----
+@Override
+public CommandResult execute(Model model) throws CommandException {
+    //Some defensive programming against NullPointerExceptions
+    requireNonNull(model);
+    //Obtains the list of people that the user is seeing
+    List<Person> lastShownList = model.getFilteredPersonList();
+
+    //More defensive programming
+    if (index.getZeroBased() >= lastShownList.size()) {
+        throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    Person personToEdit = lastShownList.get(index.getZeroBased());
+    //Creates a new instance of person to replace the old one with
+    Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
+    //Even more defensive programming to ensure that an EditCommand does not shadow an existing entry
+    if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
+        throw new CommandException(MESSAGE_DUPLICATE_PERSON);
+    }
+
+    //Save the edited person
+    model.setPerson(personToEdit, editedPerson);
+    model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+    return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, editedPerson));
+}
+----
+. As suspected, `command#execute()` does indeed make changes to `model`.
+. We can a closer look at how storage works by repeatedly stepping into the code until we arrive at
+`JsonAddressBook#saveAddressBook()`.
++
+.JsonAddressBook#saveAddressBook()
+[source, java]
+----
+/**
+ * Similar to {@link #saveAddressBook(ReadOnlyAddressBook)}.
+ *
+ * @param filePath location of the data. Cannot be null.
+ */
+public void saveAddressBook(ReadOnlyAddressBook addressBook, Path filePath) throws IOException {
+    requireNonNull(addressBook);
+    requireNonNull(filePath);
+
+    FileUtil.createIfMissing(filePath);
+    //What magic goes on below?
+    JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), filePath);
+}
+----
+. Again, it appears that the heavy lifting is delegated. Let's take a look at ``JsonSerializableAddressBook``'s
+constructor.
++
+.JsonSerializableAddressBook#JsonSerializableAddressBook()
+[source, java]
+----
+/**
+ * Converts a given {@code ReadOnlyAddressBook} into this class for Jackson use.
+ *
+ * @param source future changes to this will not affect the created {@code JsonSerializableAddressBook}.
+ */
+public JsonSerializableAddressBook(ReadOnlyAddressBook source) {
+    persons.addAll(
+        source.getPersonList()
+              .stream()
+              .map(JsonAdaptedPerson::new)
+              .collect(Collectors.toList()));
+}
+----
+. It appears that a `JsonAdaptedPerson` is created for each `Person` and then added to the
+`JsonSerializableAddressBook`.
+. We can continue to step through until we return to `MainWindow#executeCommand()`.
+. Stepping into ``resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());``, we end up in:
++
+.ResultDisplay#setFeedbackToUser()
+[source, java]
+----
+public void setFeedbackToUser(String feedbackToUser) {
+    requireNonNull(feedbackToUser);
+    resultDisplay.setText(feedbackToUser);
+}
+----
+. Finally, we step through until we reach the end of `MainWindow#executeCommand()`.
+
+[discrete]
+== Conclusion
+
+In this tutorial, we traced a valid edit command from raw user input to the result being displayed to the user. From
+this tutorial, you learned more about the inner workings of AddressBook and how the various components mesh together
+to form one cohesive product.
+
+A sequence diagram focused on the Logic component is provided for reference.
+
+.Sequence diagram from the trace
+image::LogicSequenceDiagram.png[width=2012px, height=1141px]
+{empty} +
+[lead]
+.Pop quiz!
+====
+Here are some quick questions to test your understanding.
+
+. In this tutorial, we traced the "happy path". Do you think will happen if we traced the following commands instead?
+What exceptions do you think will be thrown(if any), where will the exceptions be thrown and where will they be
+handled?
+.. `redit 1 n/Alice Yu`
+.. `edit 0 n/Alice Yu`
+.. `edit 1 n/Alex Yeoh`
+.. `edit 1`
+.. `edit 1 n/アリス ユ`
+.. `edit 1 t/one t/two t/three t/one`
+
+. What components will you have to modify to perform the following enhancements to the application?
+.. Make command words case-insensitive
+.. Allow `delete` to remove more than one index at a time
+.. Save the address book in the CSV format instead
+.. Add a new command
+.. Add a new field to `Person`
+.. Add a new entity to the address book
+====
+
+
+

@@ -1,0 +1,45 @@
+@startuml
+!include style.puml
+
+Actor User as user USER_COLOR
+Participant ":UI" as mw UI_COLOR
+Participant ":LogicManager" as logic LOGIC_COLOR
+Participant ":AddressBookParser" as abp LOGIC_COLOR
+Participant ":EditCommandParser" as ecp LOGIC_COLOR
+Participant ":EditCommand" as ec LOGIC_COLOR
+Participant ":Model" as model MODEL_COLOR
+Participant ":Storage" as storage STORAGE_COLOR
+
+
+user -> mw : executeCommand
+activate mw
+mw -> logic ++: execute
+logic -> abp ++: parseCommand
+create ecp
+abp -> ecp
+abp -> ecp ++: parse
+create ec
+ecp -> ec : index, editPersonDescriptor
+ecp -> abp --: command
+abp -> logic --: command
+logic -> ec ++: execute
+ref over ec
+create a new Person and
+ensure no conflicts exists
+end ref
+ec -> model ++: setPerson
+model --> ec --
+ec -> model ++: updateFilteredPersonList
+model --> ec --
+ec -> logic --: commandResult
+logic -> storage ++: saveAddressBook
+ref over storage
+create a JsonSerializableAddressBook
+and store that instead.
+end ref
+storage --> logic --
+logic -> mw --: commandResult
+mw -> mw ++ : setFeedbackToUser
+mw -> user : commandResult
+deactivate mw
+@enduml
