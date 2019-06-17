@@ -10,6 +10,7 @@ ifdef::env-github[]
 :tip-caption: :bulb:
 :note-caption: :information_source:
 :warning-caption: :warning:
+:source-highlighter: highlightjs
 endif::[]
 
 
@@ -30,11 +31,48 @@ commands implement `Command` which means that they must override `execute()`. By
 instance of `CommandResult` upon success and throws a `CommandException` otherwise. This exception is handled
 gracefully and the error message provided to `CommandException` is printed the application.
 
-Let's start by creating a new `RemarkCommand` class in the `src/main/java/seedu/address/logic/command` directory.
+[.right.center]
+.UML diagram describing the relationship between RemarkCommand and Command
+image::CommandInterface.png[width=385px, height=385px, float="right", align="center"]
 
+Let's start by creating a new `RemarkCommand` class in the `src/main/java/seedu/address/logic/command` directory.
 
 For now, let's keep `RemarkCommand` as simple as possible and return a message that it is not fully implemented yet. We
 accomplish that by throwing a `CommandException` with an accompanying error message.
+
+.RemarkCommand.java
+[source, java]
+----
+package seedu.address.logic.commands;
+
+import static seedu.address.logic.parser.CliSyntax.PREFIX_REMARK;
+
+import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.model.Model;
+
+/**
+ * Changes the remark of an existing person in the address book.
+ */
+public class RemarkCommand extends Command {
+
+    public static final String COMMAND_WORD = "remark";
+
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the remark of the person identified "
+            + "by the index number used in the last person listing. "
+            + "Existing remark will be overwritten by the input.\n"
+            + "Parameters: INDEX (must be a positive integer) "
+            + PREFIX_REMARK + "[REMARK]\n"
+            + "Example: " + COMMAND_WORD + " 1 "
+            + PREFIX_REMARK + "Likes to swim.";
+
+    public static final String MESSAGE_NOT_IMPLEMENTED_YET = "Remark command not implemented yet";
+
+    @Override
+    public CommandResult execute(Model model) throws CommandException {
+        throw new CommandException(MESSAGE_NOT_IMPLEMENTED_YET);
+    }
+}
+----
 
 Check out the code for the `RemarkCommand`
 link:++https://github.com/j-lum/addressbook-level35/commit/72256eacea79dfcf077f5c7cb6f89819c02f090e#diff

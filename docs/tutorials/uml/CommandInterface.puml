@@ -1,0 +1,18 @@
+@startuml
+
+Interface Command {
++ {abstract} execute(Model) : CommandResult
+}
+
+Class RemarkCommand {
++ COMMAND_WORD : String
++ MESSAGE_USAGE : String
++ MESSAGE_NOT_IMPLEMENTED_YET : String
+---
++ execute(Model) : CommandResult
+{exception : CommandException}
+}
+
+RemarkCommand -up-|> Command
+
+@enduml
