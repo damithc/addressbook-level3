@@ -1,7 +1,9 @@
 @startuml
 
-Interface Command {
+Abstract Class Command {
+---
 + {abstract} execute(Model) : CommandResult
+{exception : CommandException}
 }
 
 Class RemarkCommand {

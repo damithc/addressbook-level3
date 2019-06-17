@@ -34,7 +34,7 @@ gracefully and the error message provided to `CommandException` is printed the a
 [.right.center]
 .UML diagram describing the relationship between RemarkCommand and Command
 image::CommandInterface.png[width=385px, height=385px, float="right", align="center"]
-
+{empty} +
 Let's start by creating a new `RemarkCommand` class in the `src/main/java/seedu/address/logic/command` directory.
 
 For now, let's keep `RemarkCommand` as simple as possible and return a message that it is not fully implemented yet. We
@@ -105,6 +105,27 @@ We start by modifying the constructor of `RemarkCommand` to accept an `Index` an
 let's change the error message to echo the values. While this is not a replacement for tests, it is an obvious way to
  tell if our code is functioning as intended.
 
+[source, java]
+----
+private final Index index;
+    private final String remark;
+
+    /**
+     * @param index of the person in the filtered person list to edit the remark
+     * @param remark of the person to be updated to
+     */
+    public RemarkCommand(Index index, String remark) {
+        requireAllNonNull(index, remark);
+
+        this.index = index;
+        this.remark = remark;
+    }
+    @Override
+    public CommandResult execute(Model model) throws CommandException {
+        throw new CommandException(String.format(MESSAGE_ARGUMENTS, index.getOneBased(), remark));
+    }
+----
+
 Your code should look something like
 link:++https://github.com/j-lum/addressbook-level35/commit/c0f8419be4fb59bffafcd73026769459e5cf5c5e#diff
 -34ace715a8a8d2e5a66e71289f017b47++[this] after you are done.
@@ -116,8 +137,75 @@ Now let's move on to writing a parser that will extract the index and remark fro
 Create a `RemarkCommandParser` class in the `seedu.address.logic.parser` package. The class must extend the `Parser`
 interface.
 
-Thankfully, `ArgumentTokenizer#tokenize()` makes it trivial to parse user input. We can now use the information
-extracted from user input to instantiate a new instance of `RemarkCommand`.
+.UML diagram describing the relationship between Parser and RemarkCommandParser
+image::ParserInterface.png[width=386px, height=350px]
+{empty} +
+Thankfully, `ArgumentTokenizer#tokenize()` makes it trivial to parse user input. Let's take a look at the JavaDoc
+provided for the function to understand what it does.
+
+[source, java]
+.ArgumentTokenizer.java
+----
+/**
+ * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
+ * respective argument values. Only the given prefixes will be recognized in the arguments string.
+ *
+ * @param argsString Arguments string of the form: {@code preamble <prefix>value <prefix>value ...}
+ * @param prefixes   Prefixes to tokenize the arguments string with
+ * @return           ArgumentMultimap object that maps prefixes to their arguments
+ */
+----
+
+We can tell `ArgumentTokenizer#tokenize()` to look out for our new prefix `r/` and it will return us an instance of
+`ArgumentMultimap`. Now let's find out what we need to do in order to obtain the Index and String that we need.
+Let's look through ArgumentMultimap :
+
+[source, java]
+.ArgumentMultimap.java
+----
+/**
+ * Returns the last value of {@code prefix}.
+ */
+public Optional<String> getValue(Prefix prefix) {
+    List<String> values = getAllValues(prefix);
+    return values.isEmpty() ? Optional.empty() : Optional.of(values.get(values.size() - 1));
+}
+----
+
+This appears to be what we need to get a String of the remark. But what about the Index? Taking a quick peek at
+existing an `Command`...
+
+[source, java]
+.DeleteCommandParser.java
+----
+Index index = ParserUtil.parseIndex(args);
+return new DeleteCommand(index);
+----
+
+There appears to be another utility class that obtains an `Index` from the input provided by the user.
+
+Now that we have the know-how to extract the data that we need from the user's input, we can instantiate
+`RemarkCommand` by passing the data through its constructor.
+
+[source, java]
+.RemarkCommandParser.java
+----
+public RemarkCommand parse(String args) throws ParseException {
+    requireNonNull(args);
+    ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_REMARK);
+
+    Index index;
+    try {
+        index = ParserUtil.parseIndex(argMultimap.getPreamble());
+    } catch (IllegalValueException ive) {
+        throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RemarkCommand.MESSAGE_USAGE), ive);
+    }
+
+    String remark = argMultimap.getValue(PREFIX_REMARK).orElse("");
+
+    return new RemarkCommand(index, remark);
+}
+----
 
 NOTE: Don't forget to update `AddressBookParser` to use our new `RemarkCommandParser`!
 
