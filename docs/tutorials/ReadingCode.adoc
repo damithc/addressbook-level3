@@ -1,4 +1,4 @@
-= AddressBook Level 3.5 - Reading Code
+= AddressBook Level 3.5 - Understanding Address Book
 :site-section: Tutorial
 :toc: macro
 :toc-title:
@@ -17,6 +17,14 @@ Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We 
 part of the effort to write new code.  ...[Therefore,] making it easy to read makes it easier to write.
 
 {empty} +
+// one way of understanding code
+Indeed, the value of being able to grok a code base is highly valuable. One way to cut your teeth is to decompose the
+ code base into manageable components. As you have no doubt read from the developer guide, Address Book consists of a
+  few logical components:
+
+image::ComponentDiagram.png[width=609px, height=547px]
+// refer to DG
+// add note to architecture DG sequence diagram
 
 In this tutorial, you will learn practical skills to navigate a large code base. We will be using the debugger
 provided by IntelliJ IDEA to trace the execution flow of Address Book from the point when a user inputs a valid `edit`
@@ -25,6 +33,50 @@ command to rendering the output.
 This tutorial consists of a few steps:
 
 toc::[]
+
+== Finding the entry point
+
+Before we can begin, we need to find an appropriate entry point for the application. Since we are interested in how
+user input is processed by the application, we need to identify the component responsible. Fortunately, we can turn
+to the developer guide.
+
+.Architecture sequence diagram from the developer guide
+image::ArchitectureSequence.png[width=828px, height=626px]
+{empty} +
+
+According to the architecture sequence diagram provided, the UI component yields control to the Logic component
+through a method named `execute`. Searching through the code base for `execute()` yields a promising candidate in
+`seedu.address.ui.CommandBox.CommandExecutor`.
+
+.Using the `Search for target by name` feature. `Navigate` > `Symbol`.
+image::Execute.png[width=1011px, height=372px]
+{empty} +
+
+A quick look at the class confirms that this is indeed close to what we're looking for. However, it is just an
+`Interface`. Let's delve further and find the implementation of the interface by using the `Find Usages` feature in
+IntelliJ IDEA.
+
+.`Find Usages` tool window. `Edit` > `Find` > `Find Usages`.
+image::FindUsages.png[width=968px, height=394px]
+{empty} +
+
+Bingo! `MainWindow#executeCommand()` seems to be exactly what we're looking for!
+
+[TIP]
+.Finding breakpoints
+====
+Unlike simple CLI applications, Address Book subscribes to an event-driven architecture style. Finding the
+correct place to set a breakpoint requires an in-depth understanding of JavaFX's event delivery process and is
+outside the scope of this tutorial.
+
+Even without the developer guide, with a bit of intuition and guesswork, it is possible to trace the program through the following:
+
+`Main#main()` > `MainApp#init()` > `UIManager#fillInnerParts()`
+
+An `executeCommand()` passed as a constructor to `CommandBox` should raise an eyebrow and that's exactly the method
+we're looking for!
+====
+
 
 == Setting the entry point of the application
 
@@ -40,21 +92,6 @@ image:StructureToolWindow.png[width=470px, height=590px]
 Set the breakpoint ::
 The breakpoint that we want to set is on the `executeCommand()` method. Click on the left gutter to set a breakpoint.
 image:LeftGutter.png[width=1171px, height=154px]
-
-
-.Finding breakpoints
-****
-Unlike simple CLI applications, Address Book subscribes to an event-driven architecture style. Finding the
-correct place to set a breakpoint requires an in-depth understanding of JavaFX's event delivery process and is
-outside the scope of this tutorial.
-
-However, with a bit of intuition and guesswork, it is possible to trace the program through the following:
-
-`Main#main()` > `MainApp#init()` > `UIManager#fillInnerParts()`
-
-An `executeCommand()` passed as a constructor to `CommandBox` should raise an eyebrow and that's exactly the method
-we're looking for!
-****
 
 == Tracing the flow of the application
 
@@ -263,8 +300,8 @@ image::LogicSequenceDiagram.png[width=2012px, height=1141px]
 ====
 Here are some quick questions to test your understanding.
 
-. In this tutorial, we traced the "happy path". Do you think will happen if we traced the following commands instead?
-What exceptions do you think will be thrown(if any), where will the exceptions be thrown and where will they be
+. In this tutorial, we traced the "happy path". What do you think will happen if we traced the following commands
+instead? What exceptions do you think will be thrown(if any), where will the exceptions be thrown and where will they be
 handled?
 .. `redit 1 n/Alice Yu`
 .. `edit 0 n/Alice Yu`
