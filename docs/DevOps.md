@@ -61,17 +61,16 @@ Any warnings or errors will be printed out to the console.
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Code Coverage
+## Code coverage
 
-This project uses Codecov for to manage coverage reports. 
-Sign up with Codecov with your GitHub account [here](https://codecov.io/signup).
-![Sign up](images/CodecovSignUp.png)
+This project uses Codecov for to manage coverage reports. Here are the steps to set up CodeCov for a fork of this repository.
 
-Add your fork of AddressBook to CodeCov.
-![Add Repo](images/CodecovAddRepo.png)
+1. Sign up with Codecov using your GitHub account [here](https://codecov.io/signup).
+1. Add your fork to CodeCov.
+   ![Add Repo](images/CodecovAddRepo.png)
 
-Replace the Codecov badge in `index.md` with the one provided in `Settings > Badges`.
-![Badge](images/CodecovBadge.png)
+1. Replace the Codecov badge in `index.md` with the one provided in `Settings > Badges`.
+   ![Badge](images/CodecovBadge.png)
 
 --------------------------------------------------------------------------------------------------------------------
 
